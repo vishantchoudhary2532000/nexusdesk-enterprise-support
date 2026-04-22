@@ -7,6 +7,11 @@ export interface Organization {
     id: string;
     name: string;
     role: string;
+    ai_instructions?: string;
+    branding?: {
+        primaryColor: string;
+        logoUrl: string | null;
+    };
 }
 
 interface OrganizationContextType {
@@ -39,7 +44,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
                 role,
                 organizations (
                     id,
-                    name
+                    name,
+                    ai_instructions,
+                    branding
                 )
             `)
             .eq('user_id', user.id);
@@ -48,7 +55,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
             const orgs = data.map((d: any) => ({
                 id: d.organizations.id,
                 name: d.organizations.name,
-                role: d.role
+                role: d.role,
+                ai_instructions: d.organizations.ai_instructions,
+                branding: d.organizations.branding
             }));
 
             setOrganizations(orgs);
@@ -70,6 +79,14 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     useEffect(() => {
         refreshOrganizations();
     }, []);
+
+    useEffect(() => {
+        if (activeOrganization?.branding?.primaryColor) {
+            document.documentElement.style.setProperty('--org-primary', activeOrganization.branding.primaryColor);
+        } else {
+            document.documentElement.style.setProperty('--org-primary', '#6366f1'); // Default Indigo
+        }
+    }, [activeOrganization]);
 
     const setActiveOrganization = (orgId: string) => {
         const org = organizations.find(o => o.id === orgId);

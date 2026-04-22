@@ -1,15 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Loader2, Sparkles, Brain, Info, History } from 'lucide-react';
 import { createClient } from '../../../../lib/supabaseClient';
 import TicketConversation from '../../../../components/TicketConversation';
 import MessageInput from '../../../../components/MessageInput';
 import AISummaryCard from '../../../../components/AISummaryCard';
+import NeuralPulse from '../../../../components/NeuralPulse';
 import Badge from '../../../../components/ui/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import TicketAuditTrail from '../../../../components/TicketAuditTrail';
+import SLATracker from '../../../../components/SLATracker';
+import MacroSelector from '../../../../components/MacroSelector';
+import KnowledgeWidget from '../../../../components/KnowledgeWidget';
+import CollaborationPresence from '../../../../components/CollaborationPresence';
 
 export default function TicketPage() {
     const router = useRouter();
@@ -20,26 +25,26 @@ export default function TicketPage() {
     const [ticket, setTicket] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    const fetchTicket = useCallback(async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+
+        const { data, error } = await supabase
+            .from('tickets')
+            .select('*')
+            .eq('id', ticketId)
+            .single();
+
+        if (error) console.error("Ticket fetch error:", error);
+        if (data) setTicket(data);
+        setLoading(false);
+    }, [ticketId, supabase]);
+
     useEffect(() => {
         if (!ticketId) return;
-
-        const fetchTicket = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                setLoading(false);
-                return;
-            }
-
-            const { data, error } = await supabase
-                .from('tickets')
-                .select('*')
-                .eq('id', ticketId)
-                .single();
-
-            if (error) console.error("Ticket fetch error:", error);
-            if (data) setTicket(data);
-            setLoading(false);
-        };
         fetchTicket();
 
         const subscription = supabase
@@ -52,7 +57,7 @@ export default function TicketPage() {
             .subscribe();
 
         return () => { supabase.removeChannel(subscription); }
-    }, [ticketId, supabase]);
+    }, [ticketId, supabase, fetchTicket]);
 
     if (loading) {
         return (
@@ -164,6 +169,14 @@ export default function TicketPage() {
                             </div>
                             <div className="text-[10px] font-bold text-slate-600 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5 uppercase tracking-widest">Global Scan</div>
                         </div>
+
+                        <div className="mb-10">
+                            <SLATracker deadline={ticket.sla_deadline} />
+                        </div>
+
+                        <div className="mb-10">
+                            <KnowledgeWidget />
+                        </div>
                         
                         <div className="space-y-8">
                             <div className="group">
@@ -187,14 +200,30 @@ export default function TicketPage() {
                     </section>
 
                     {/* Neuro-Analysis (AI) */}
-                    <section>
-                         <div className="flex items-center gap-3 mb-8">
-                            <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                                <Brain className="w-4 h-4 text-indigo-400" />
+                    <section className="space-y-10">
+                         <div className="flex flex-wrap items-center gap-4">
+                            <CollaborationPresence ticketId={ticket.id} />
+                            <MacroSelector ticketId={ticket.id} onSuccess={() => fetchTicket()} />
+                            <div className="h-6 w-[1px] bg-slate-800/50" />
+                            <div className="flex items-center gap-2">
+                                <Badge variant={ticket.priority === 'high' ? 'error' : ticket.priority === 'medium' ? 'warning' : 'indigo'}>
+                                    {ticket.priority}
+                                </Badge>
+                                <Badge variant={ticket.status === 'open' ? 'success' : 'default'}>
+                                    {ticket.status}
+                                </Badge>
                             </div>
-                            <h3 className="text-[11px] font-black text-indigo-400 uppercase tracking-[0.3em]">Neuro-Analysis</h3>
                         </div>
-                        <AISummaryCard ticketId={ticket.id} organizationId={ticket.organization_id} initialSummary={ticket.summary} />
+                        
+                        <NeuralPulse 
+                            metadata={ticket.ai_metadata || {}} 
+                            currentPriority={ticket.priority} 
+                        />
+                        
+                        <div className="pt-4 border-t border-white/5">
+                            <p className="text-[9px] text-slate-600 font-black tracking-[0.3em] uppercase mb-6 pl-1 italic">Synthesized Summary</p>
+                            <AISummaryCard ticketId={ticket.id} organizationId={ticket.organization_id} initialSummary={ticket.summary} />
+                        </div>
                     </section>
 
                     {/* Protocol Logs (Timeline) */}

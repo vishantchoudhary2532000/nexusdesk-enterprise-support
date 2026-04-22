@@ -45,7 +45,7 @@ export default function TicketFilters({
         <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#0f172a]/60 backdrop-blur-3xl p-3 rounded-[2.5rem] border border-white/[0.05] flex flex-col md:flex-row gap-3 relative overflow-visible group shadow-2xl"
+            className="bg-[#0f172a]/60 backdrop-blur-3xl p-3 rounded-[2.5rem] border border-white/[0.05] flex flex-col md:flex-row gap-3 relative overflow-visible group shadow-2xl z-40"
         >
             <div className="flex-1 relative group/search">
                 <Search className="w-4 h-4 text-slate-500 absolute left-6 top-1/2 -translate-y-1/2 group-focus-within/search:text-indigo-400 transition-colors z-10" />

@@ -5,8 +5,8 @@
   --foreground: #e2e8f0;
   --card: rgba(15, 23, 42, 0.6);
   --card-border: rgba(148, 163, 184, 0.08);
-  --accent: #818cf8;
-  --accent-glow: rgba(129, 140, 248, 0.15);
+  --accent: var(--org-primary, #818cf8);
+  --accent-glow: color-mix(in srgb, var(--accent) 15%, transparent);
   --muted: #64748b;
   --surface: rgba(30, 41, 59, 0.5);
 }

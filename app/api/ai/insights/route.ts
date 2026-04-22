@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { generateReply } from "../../../../lib/ai/aiClient";
+import { generateInsights } from "../../../../lib/ai/aiClient";
 
 export async function POST(request: Request) {
   try {
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     if (!user)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Validate membership and fetch instructions
+    // Validate membership
     const { data: membership } = await supabase
       .from("organization_members")
       .select(`
@@ -55,67 +55,21 @@ export async function POST(request: Request) {
 
     const orgInstructions = (membership.organizations as any)?.ai_instructions;
 
-    // Check usage limits
-    const d = new Date();
-    const period = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-
-    const { data: usage } = await supabase
-      .from("usage_metrics")
-      .select("ai_requests")
-      .eq("organization_id", organizationId)
-      .eq("period", period)
-      .maybeSingle();
-
-    const maxAiRequests = 20;
-    const currentRequests = usage?.ai_requests || 0;
-
-    if (currentRequests >= maxAiRequests) {
-      return NextResponse.json(
-        {
-          error:
-            "Daily AI request limit reached for this organization (20/day).",
-        },
-        { status: 429 },
-      );
-    }
-
-    // Fetch ticket context
-    const { data: ticketData } = await supabase
-      .from("tickets")
-      .select("description")
-      .eq("id", ticketId)
-      .single();
-
+    // Fetch messages for insights
     const { data: messagesData } = await supabase
       .from("ticket_messages")
       .select("message")
       .eq("ticket_id", ticketId)
       .order("created_at", { ascending: true });
 
-    const messages = [
-      `Initial Problem: ${ticketData?.description || ""}`,
-      ...(messagesData?.map((m) => m.message) || []),
-    ];
+    const messages = messagesData?.map((m) => m.message) || [];
 
-    // Generate AI string with organization DNA
-    const reply = await generateReply(messages, orgInstructions);
+    // Generate insights securely on the server
+    const insights = await generateInsights(messages, organizationId, orgInstructions);
 
-    // Update Usage Tracker
-    if (usage) {
-      await supabase
-        .from("usage_metrics")
-        .update({ ai_requests: currentRequests + 1 })
-        .eq("organization_id", organizationId)
-        .eq("period", period);
-    } else {
-      await supabase
-        .from("usage_metrics")
-        .insert({ organization_id: organizationId, period, ai_requests: 1 });
-    }
-
-    return NextResponse.json({ reply });
+    return NextResponse.json({ insights });
   } catch (err: any) {
-    console.error("AI Reply API Error:", err);
+    console.error("AI Insights API Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

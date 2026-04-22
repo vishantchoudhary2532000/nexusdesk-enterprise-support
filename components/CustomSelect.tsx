@@ -72,7 +72,7 @@ export default function CustomSelect({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.98 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute z-[100] w-full mt-2 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-xl shadow-2xl overflow-hidden min-w-[160px]"
+                        className="absolute z-[1000] w-full mt-2 bg-slate-900 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden min-w-[160px]"
                     >
                         <div className="max-h-60 overflow-y-auto py-1.5 custom-scrollbar">
                             {options.map((option) => {

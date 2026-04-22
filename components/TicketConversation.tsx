@@ -12,6 +12,7 @@ interface Message {
     user_id: string;
     message: string;
     attachment_url: string | null;
+    is_internal: boolean;
     created_at: string;
 }
 
@@ -139,12 +140,14 @@ export default function TicketConversation({ ticketId }: TicketConversationProps
                                     <div className={`flex items-center gap-3 mb-2.5 px-2 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}>
                                         <div className="flex items-center gap-2">
                                             {isMine ? (
-                                                <Sparkles className="w-3 h-3 text-indigo-400" />
+                                                <Sparkles className={`w-3 h-3 ${msg.is_internal ? 'text-amber-400' : 'text-indigo-400'}`} />
                                             ) : (
                                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
                                             )}
-                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isMine ? 'text-indigo-400' : 'text-slate-500'}`}>
-                                                {isMine ? 'Nexus Protocol Response' : 'Neural Identification'}
+                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+                                                msg.is_internal ? 'text-amber-500' : isMine ? 'text-indigo-400' : 'text-slate-500'
+                                            }`}>
+                                                {msg.is_internal ? 'Internal Support Log' : isMine ? 'Nexus Protocol Response' : 'Neural Identification'}
                                             </span>
                                         </div>
                                         <span className="text-[9px] font-black text-slate-700 tracking-widest tabular-nums uppercase">
@@ -152,7 +155,10 @@ export default function TicketConversation({ ticketId }: TicketConversationProps
                                         </span>
                                     </div>
                                     
-                                    <div className={`px-8 py-5 rounded-[2.25rem] text-[15px] leading-relaxed shadow-2xl border relative group-hover:shadow-black/60 transition-all duration-300 ${isMine
+                                    <div className={`px-8 py-5 rounded-[2.25rem] text-[15px] leading-relaxed shadow-2xl border relative group-hover:shadow-black/60 transition-all duration-300 ${
+                                            msg.is_internal 
+                                            ? 'bg-amber-950/40 border-amber-500/30 text-amber-100 rounded-tr-none ring-1 ring-amber-500/10'
+                                            : isMine
                                             ? 'bg-indigo-600 border-indigo-500/50 text-white rounded-tr-none'
                                             : 'bg-[#0f172a]/80 backdrop-blur-2xl border-white/[0.03] text-slate-200 rounded-tl-none shadow-inner'
                                         }`}>

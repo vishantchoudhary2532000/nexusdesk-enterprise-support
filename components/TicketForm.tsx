@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '../lib/supabaseClient';
 import { useOrganization } from './OrganizationProvider';
 import { Paperclip, Loader2, Plus, Sparkles, AlertCircle } from 'lucide-react';
@@ -24,7 +25,8 @@ const priorityOptions = [
     { label: 'URGENT / HIGH', value: 'high' }
 ];
 
-export default function TicketForm({ onTicketCreated }: { onTicketCreated: () => void }) {
+export default function TicketForm({ onTicketCreated, className = "" }: { onTicketCreated?: () => void, className?: string }) {
+    const router = useRouter();
     const supabase = createClient();
     const { activeOrganization } = useOrganization();
     const [title, setTitle] = useState('');
@@ -117,7 +119,11 @@ export default function TicketForm({ onTicketCreated }: { onTicketCreated: () =>
                 description: 'Support core has been alerted.',
             });
             
-            onTicketCreated();
+            if (onTicketCreated) {
+                onTicketCreated();
+            } else {
+                router.push('/dashboard/tickets');
+            }
         } catch (err: any) {
             toast.error('Submission Failed', {
                 id: toastId,
@@ -129,18 +135,18 @@ export default function TicketForm({ onTicketCreated }: { onTicketCreated: () =>
     };
 
     return (
-        <Card className="p-10 border-slate-800/40 relative overflow-hidden group">
+        <Card className={`p-6 md:p-8 border-slate-800/40 relative overflow-hidden group ${className}`}>
             <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[100px] -mr-32 -mt-32 pointer-events-none group-hover:bg-indigo-500/10 transition-colors" />
             
-            <header className="mb-10 flex items-center justify-between">
+            <header className="mb-6 flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                        <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                            <Plus className="w-6 h-6 text-indigo-400" />
+                    <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                        <div className="p-1.5 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
+                            <Plus className="w-5 h-5 text-indigo-400" />
                         </div>
                         Initialize Request
                     </h2>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2 ml-14">Secure Communication Protocol</p>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1.5 ml-11">Secure Communication Protocol</p>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-full">
                     <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
@@ -148,8 +154,8 @@ export default function TicketForm({ onTicketCreated }: { onTicketCreated: () =>
                 </div>
             </header>
 
-            <form onSubmit={handleSubmit} className="space-y-10 relative z-10">
-                <div className="grid grid-cols-1 gap-10">
+            <form onSubmit={handleSubmit} className="space-y-6 md:space-y-10 relative z-10">
+                <div className="grid grid-cols-1 gap-6 md:gap-10">
                     <Input 
                         label="Objective Identifier"
                         placeholder="Brief summary of your requirements..."
@@ -162,29 +168,29 @@ export default function TicketForm({ onTicketCreated }: { onTicketCreated: () =>
                         label="Core Parameters"
                         placeholder="Provide comprehensive details for accurate processing..."
                         multiline
-                        rows={5}
+                        rows={3}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         required
                     />
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                         <div className="space-y-2">
-                             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Classification Type</label>
+                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Classification Type</label>
                              <CustomSelect
                                 value={category}
                                 onChange={setCategory}
                                 options={categoryOptions}
-                                className="h-14 border-slate-800 bg-slate-900/50"
+                                className="h-12 border-slate-800 bg-slate-900/50"
                             />
                         </div>
                         <div className="space-y-2">
-                             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Urgency Matrix</label>
+                             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Urgency Matrix</label>
                              <CustomSelect
                                 value={priority}
                                 onChange={setPriority}
                                 options={priorityOptions}
-                                className="h-14 border-slate-800 bg-slate-900/50"
+                                className="h-12 border-slate-800 bg-slate-900/50"
                                 variant={priority === 'high' ? 'error' : priority === 'medium' ? 'warning' : 'indigo'}
                             />
                         </div>
@@ -201,27 +207,36 @@ export default function TicketForm({ onTicketCreated }: { onTicketCreated: () =>
                             />
                             <label
                                 htmlFor="header-file-upload"
-                                className={`w-full flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-[2rem] cursor-pointer transition-all ${file ? 'border-indigo-500/50 bg-indigo-500/5 text-indigo-300' : 'border-slate-800 hover:border-indigo-500/30 hover:bg-slate-800/40 text-slate-500'}`}
+                                className={`w-full flex flex-col items-center justify-center p-4 md:p-6 border-2 border-dashed rounded-[2rem] cursor-pointer transition-all ${file ? 'border-indigo-500/50 bg-indigo-500/5 text-indigo-300' : 'border-slate-800 hover:border-indigo-500/30 hover:bg-slate-800/40 text-slate-500'}`}
                             >
-                                <Paperclip className={`w-8 h-8 mb-4 ${file ? 'text-indigo-400' : 'text-slate-600 group-hover/upload:text-indigo-400'}`} />
-                                <span className="text-sm font-bold tracking-tight text-center px-4">
+                                <Paperclip className={`w-5 h-5 md:w-6 md:h-6 mb-3 ${file ? 'text-indigo-400' : 'text-slate-600 group-hover/upload:text-indigo-400'}`} />
+                                <span className="text-xs font-bold tracking-tight text-center px-4">
                                     {file ? file.name : 'Drop supporting documentation or click to browse'}
                                 </span>
-                                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest mt-2">{file ? 'File analysis ready' : 'Max payload size: 25MB'}</p>
+                                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1.5">{file ? 'File analysis ready' : 'Max payload size: 25MB'}</p>
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-4 flex flex-col sm:flex-row gap-4">
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        className="flex-1 h-16 rounded-[1.5rem] text-base"
+                        onClick={() => router.push('/dashboard/tickets')}
+                    >
+                        Cancel Protocol
+                    </Button>
                     <Button
                         type="submit"
                         loading={loading}
-                        className="w-full h-16 rounded-[1.5rem] text-base"
+                        className="flex-[2] h-16 rounded-[1.5rem] text-base"
                     >
                         Initialize Support Chain
                     </Button>
-                    <div className="flex items-center justify-center gap-6 mt-6 opacity-30">
+                </div>
+                <div className="flex items-center justify-center gap-6 mt-6 opacity-30">
                         <div className="flex items-center gap-1.5">
                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Encrypted</span>
@@ -230,7 +245,6 @@ export default function TicketForm({ onTicketCreated }: { onTicketCreated: () =>
                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Real-time Sync</span>
                         </div>
-                    </div>
                 </div>
             </form>
         </Card>

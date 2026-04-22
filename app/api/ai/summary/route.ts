@@ -37,16 +37,23 @@ export async function POST(request: Request) {
     if (!user)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Validate membership
+    // Validate membership and fetch instructions
     const { data: membership } = await supabase
       .from("organization_members")
-      .select("role")
+      .select(`
+        role,
+        organizations (
+          ai_instructions
+        )
+      `)
       .eq("organization_id", organizationId)
       .eq("user_id", user.id)
       .single();
 
     if (!membership)
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+    const orgInstructions = (membership.organizations as any)?.ai_instructions;
 
     // Check cache first
     const { data: cached } = await supabase
@@ -112,8 +119,8 @@ export async function POST(request: Request) {
       ...(rawMessages.data?.map((m) => m.message) || []),
     ];
 
-    // Generate AI string
-    const summary = await generateSummary(messages);
+    // Generate AI string with organization DNA
+    const summary = await generateSummary(messages, orgInstructions);
 
     // Update Cache
     await supabase.from("ai_cache").insert({
